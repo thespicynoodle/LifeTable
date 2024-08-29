@@ -26,6 +26,10 @@ def main():
     st.title("Research Mutt")
     st.write("Welcome to the search assistant app")
     st.write("Use the navigation on the left to browse different pages.")
+
+    st.write("** NEEED TO ADD DATA UNTIL 1991 TO SUPABASE**")
+
+    
     st.write(update_time())
 if __name__ == "__main__":
     main()
