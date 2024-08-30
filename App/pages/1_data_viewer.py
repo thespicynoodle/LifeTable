@@ -24,7 +24,7 @@ def load_data():
     batch_size = 1000  # Adjust the batch size if needed
     
     while True:
-        response = supabase.table('LifeTables').select("*").range(start_row, start_row + batch_size - 1).execute()
+        response = supabase.table('PopulationData').select("*").range(start_row, start_row + batch_size - 1).execute()
         batch_data = response.data
         
         # If no more data is fetched, break the loop
