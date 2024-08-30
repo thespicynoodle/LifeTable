@@ -2,3 +2,4 @@ supabase
 python-dotenv
 streamlit 
 pandas
+openpyxl
