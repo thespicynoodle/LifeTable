@@ -116,6 +116,11 @@ if st.button('Calculate and Save Life Tables'):
                 else:
                     st.write(f"No data available for {selected_country} ({selected_gender}) in {year}")
 
+        # Display CSV data on the front end
+        for year, life_table in life_tables.items():
+            st.write(f"Life Table for {selected_country} ({selected_gender}) in {year}")
+            st.dataframe(life_table)
+
         # Provide download link for the Excel file
         with open('life_tables.xlsx', 'rb') as file:
             st.download_button(
