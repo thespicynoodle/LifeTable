@@ -98,6 +98,7 @@ if st.button('Calculate and Save Life Tables'):
     if selected_years:
         # Create an Excel writer
         with pd.ExcelWriter('life_tables.xlsx') as writer:
+            life_tables = {}
             for year in selected_years:
                 filtered_df = df[
                     (df['year'] == year) &
@@ -110,6 +111,7 @@ if st.button('Calculate and Save Life Tables'):
                     population = filtered_df['population'].tolist()
 
                     life_table = calculate_life_table(deaths, population)
+                    life_tables[year] = life_table
 
                     # Write each life table to a different sheet
                     life_table.to_excel(writer, sheet_name=str(year), index=False)
