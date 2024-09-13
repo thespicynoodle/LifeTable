@@ -55,7 +55,7 @@ def calculate_life_table(deaths, population):
     df.loc[2, 'Linearity Adjustment (nax)'] = 0.4
 
     df['Probability of Dying (nqx)'] = df['Years in Interval (n)'] * df['Mortality Rate (nmx)'] / \
-                                       (1 + (1 - df['Linearity Adjustment (nax)']) * df['Mortality Rate (nmx)']*df['Years in Interval (n)'])
+                                       (1 + (1 - df['Linearity Adjustment (nax)']) * df['Mortality Rate (nmx)'] * df['Years in Interval (n)'])
     
     df['Probability of Surviving (npx)'] = 1 - df['Probability of Dying (nqx)']
     
@@ -77,6 +77,8 @@ def calculate_life_table(deaths, population):
     df['Expectancy of Life at Age x (ex)'] = df['Cumulative Years Lived (Tx)'] / df['Individuals Surviving (lx)']
     
     return df
+
+# Decomposition calculation
 def calculate_life_expectancy_contribution(life_table_1, life_table_2):
     """Calculate the contribution of each age group to life expectancy difference between two years."""
     # Ensure that the dataframes are aligned on age groups
@@ -120,6 +122,7 @@ def calculate_life_expectancy_contribution(life_table_1, life_table_2):
     contribution_df = pd.concat([contribution_df, total_row], ignore_index=True)
 
     return contribution_df
+
 # Streamlit app logic
 st.title('Life Expectancy Decomposition Tool')
 
@@ -158,11 +161,17 @@ if st.button('Calculate Life Expectancy Difference Decomposition'):
             life_table_1 = calculate_life_table(filtered_df_1['total_deaths'].tolist(), filtered_df_1['population'].tolist())
             life_table_2 = calculate_life_table(filtered_df_2['total_deaths'].tolist(), filtered_df_2['population'].tolist())
 
+            # Display the life tables
+            st.write(f"Life Table for {selected_years[0]}:")
+            st.dataframe(life_table_1)
+            st.write(f"Life Table for {selected_years[1]}:")
+            st.dataframe(life_table_2)
+
             # Calculate the contribution to the life expectancy difference
             le_contributions = calculate_life_expectancy_contribution(life_table_1, life_table_2)
 
             # Display the decomposition results
-            st.write(f"Life Expectancy Contribution by Age Group ({selected_years[0]} vs {selected_years[1]})")
+            st.write(f"Life Expectancy Contribution by Age Group ({selected_years[0]} vs {selected_years[1]}):")
             st.dataframe(le_contributions)
     else:
         st.warning("Please select exactly two years for decomposition.")
