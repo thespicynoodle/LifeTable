@@ -35,7 +35,7 @@ def load_data():
 
 # Life table calculation
 def calculate_life_table(deaths, population):
-    """Calculate life table from deaths and population data."""
+    """Calculate life table from deaths and population data"""
     df = pd.DataFrame({
         'Age': ['<1 year', '12-23 months', '2-4 years', '5-9 years', '10-14 years', '15-19 years', '20-24 years', 
                 '25-29 years', '30-34 years', '35-39 years', '40-44 years', '45-49 years', '50-54 years', 
@@ -48,14 +48,13 @@ def calculate_life_table(deaths, population):
 
     df['Mortality Rate (nmx)'] = df['Deaths (nDx)'] / df['Reported Population (nNx)']
     
-    # Add linearly adjusted probabilities
     df['Linearity Adjustment (nax)'] = 0.5
     df.loc[0, 'Linearity Adjustment (nax)'] = 0.1
     df.loc[1, 'Linearity Adjustment (nax)'] = 0.3
     df.loc[2, 'Linearity Adjustment (nax)'] = 0.4
 
     df['Probability of Dying (nqx)'] = df['Years in Interval (n)'] * df['Mortality Rate (nmx)'] / \
-                                       (1 + (1 - df['Linearity Adjustment (nax)']) * df['Mortality Rate (nmx)'] * df['Years in Interval (n)'])
+                                       (1 + (1 - df['Linearity Adjustment (nax)']) * df['Mortality Rate (nmx)']*df['Years in Interval (n)'])
     
     df['Probability of Surviving (npx)'] = 1 - df['Probability of Dying (nqx)']
     
