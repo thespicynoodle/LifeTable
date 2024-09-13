@@ -87,11 +87,11 @@ def calculate_life_expectancy_contribution(life_table_1, life_table_2):
     contributions = []
 
     for i in range(len(life_table_1)):
-        if i == len(life_table_1) - 1:  # Last age group
+        if i == len(life_table_1) - 1:  # Last age group (open-ended)
             delta_x = (life_table_1.loc[i, 'Individuals Surviving (lx)'] / life_table_1.loc[0, 'Individuals Surviving (lx)']) * \
                       (life_table_2.loc[i, 'Cumulative Years Lived (Tx)'] / life_table_2.loc[i, 'Individuals Surviving (lx)'] - \
                        life_table_1.loc[i, 'Cumulative Years Lived (Tx)'] / life_table_1.loc[i, 'Individuals Surviving (lx)'])
-        else:
+        else:  # For all other age groups
             delta_x = life_table_2.loc[i, 'Years in Interval (n)'] * \
                       ((life_table_1.loc[i, 'Individuals Surviving (lx)'] / life_table_1.loc[0, 'Individuals Surviving (lx)']) * \
                        (life_table_2.loc[i, 'Years Lived in Interval (nLx)'] / life_table_2.loc[i, 'Individuals Surviving (lx)'] - \
@@ -102,11 +102,21 @@ def calculate_life_expectancy_contribution(life_table_1, life_table_2):
 
         contributions.append(delta_x)
 
-    return pd.DataFrame({
+    # Create a DataFrame for the contributions
+    contribution_df = pd.DataFrame({
         'Age': life_table_1['Age'],
         'Contribution to LE difference (years)': contributions
     })
 
+    # Add a row for the sum of contributions
+    total_contribution = sum(contributions)
+    total_row = pd.DataFrame({
+        'Age': ['Life expectancy difference'],
+        'Contribution to LE difference (years)': [total_contribution]
+    })
+    contribution_df = pd.concat([contribution_df, total_row], ignore_index=True)
+
+    return contribution_df
 # Streamlit app logic
 st.title('Life Expectancy Decomposition Tool')
 
