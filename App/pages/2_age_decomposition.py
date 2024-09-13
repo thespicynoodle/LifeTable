@@ -238,28 +238,28 @@ if st.button('Calculate Life Expectancy Difference Decomposition'):
             delta_x = le_contributions['Contribution to LE difference (years)']
 
         # Get mortality rates for both years
-        mortality_rate_1 = life_table_1['Mortality Rate (nmx)']
-        mortality_rate_2 = life_table_2['Mortality Rate (nmx)']
+            mortality_rate_1 = life_table_1['Mortality Rate (nmx)']
+            mortality_rate_2 = life_table_2['Mortality Rate (nmx)']
 
         # Get risk factor proportions for both years
-        risk_factors_1 = filtered_df_1[['tobacco_deaths', 'alcohol_deaths', 'drug_deaths']] / filtered_df_1['total_deaths']
-        risk_factors_2 = filtered_df_2[['tobacco_deaths', 'alcohol_deaths', 'drug_deaths']] / filtered_df_2['total_deaths']
+            risk_factors_1 = filtered_df_1[['tobacco_deaths', 'alcohol_deaths', 'drug_deaths']] / filtered_df_1['total_deaths']
+            risk_factors_2 = filtered_df_2[['tobacco_deaths', 'alcohol_deaths', 'drug_deaths']] / filtered_df_2['total_deaths']
 
         # Calculate risk factor contributions
-        risk_factor_contributions = calculate_risk_factor_contributions(delta_x, mortality_rate_1, mortality_rate_2, risk_factors_1, risk_factors_2)
+            risk_factor_contributions = calculate_risk_factor_contributions(delta_x, mortality_rate_1, mortality_rate_2, risk_factors_1, risk_factors_2)
 
         # Display the risk factor contributions
-        st.write('Contribution of Risk Factors to Life Expectancy Difference:')
-        st.dataframe(risk_factor_contributions)
+            st.write('Contribution of Risk Factors to Life Expectancy Difference:')
+            st.dataframe(risk_factor_contributions)
 
         # Add a download button for CSV
-        csv = risk_factor_contributions.to_csv(index=False).encode('utf-8')
-        st.download_button(
-            label="Download Risk Factor Contributions as CSV",
-            data=csv,
-            file_name=f'Risk_Factor_Contributions_{earlier_year}_vs_{later_year}_{selected_country}_{selected_gender}.csv',
-            mime='text/csv',
-        )
+            csv = risk_factor_contributions.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                label="Download Risk Factor Contributions as CSV",
+                data=csv,
+                file_name=f'Risk_Factor_Contributions_{earlier_year}_vs_{later_year}_{selected_country}_{selected_gender}.csv',
+                mime='text/csv',
+            )
 
             # Add a download button for CSV
             csv = le_contributions.to_csv(index=False).encode('utf-8')
