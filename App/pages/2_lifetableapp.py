@@ -196,5 +196,14 @@ if st.button('Calculate Life Expectancy Difference Decomposition'):
             # Display the decomposition results
             st.write(f"Life Expectancy Contribution by Age Group ({later_year} vs {earlier_year}):")
             st.dataframe(le_contributions)
+
+            # Add a download button for CSV
+            csv = le_contributions.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                label="Download Contributions as CSV",
+                data=csv,
+                file_name=f'LE_Contributions_{earlier_year}_vs_{later_year}_{selected_country}_{selected_gender}.csv',
+                mime='text/csv',
+            )
     else:
         st.warning("Please select exactly two years for decomposition.")
