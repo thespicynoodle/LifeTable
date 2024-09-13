@@ -129,6 +129,17 @@ st.title('Life Expectancy Decomposition Tool')
 # Load the data from Supabase
 df = load_data()
 
+
+# Define the correct order of age groups
+age_order = ['<1 year', '12-23 months', '2-4 years', '5-9 years', '10-14 years', '15-19 years', 
+             '20-24 years', '25-29 years', '30-34 years', '35-39 years', '40-44 years', 
+             '45-49 years', '50-54 years', '55-59 years', '60-64 years', '65-69 years', 
+             '70-74 years', '75-79 years', '80-84 years', '85-89 years', '90-94 years', '95+ years']
+
+df['age_name'] = pd.Categorical(df['age_name'], categories=age_order, ordered=True)
+df = df.sort_values('age_name')
+
+
 # Check if data is loaded properly
 if df.empty:
     st.error("No data loaded from Supabase.")
