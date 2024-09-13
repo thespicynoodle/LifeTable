@@ -88,14 +88,14 @@ def calculate_life_expectancy_contribution(life_table_1, life_table_2):
 
     for i in range(len(life_table_1)):
         if i == len(life_table_1) - 1:  # Last age group
-            delta_x = (life_table_2.loc[i, 'lx'] / life_table_1.loc[i, 'lx']) * \
-                      (life_table_2.loc[i, 'Tx'] / life_table_2.loc[i, 'lx'] - \
-                       life_table_1.loc[i, 'Tx'] / life_table_1.loc[i, 'lx'])
+            delta_x = (life_table_2.loc[i, 'Individuals Surviving (lx)'] / life_table_1.loc[i, 'Individuals Surviving (lx)']) * \
+                      (life_table_2.loc[i, 'Cumulative Years Lived (Tx)'] / life_table_2.loc[i, 'Individuals Surviving (lx)'] - \
+                       life_table_1.loc[i, 'Cumulative Years Lived (Tx)'] / life_table_1.loc[i, 'Individuals Surviving (lx)'])
         else:
-            delta_x = life_table_2.loc[i, 'n'] * \
-                      ((life_table_2.loc[i, 'lx'] / life_table_1.loc[i, 'lx']) * \
-                       (life_table_2.loc[i, 'Lx'] / life_table_2.loc[i, 'lx'] - \
-                        life_table_1.loc[i, 'Lx'] / life_table_1.loc[i, 'lx']))
+            delta_x = life_table_2.loc[i, 'Years in Interval (n)'] * \
+                      ((life_table_2.loc[i, 'Individuals Surviving (lx)'] / life_table_1.loc[i, 'Individuals Surviving (lx)']) * \
+                       (life_table_2.loc[i, 'Years Lived in Interval (nLx)'] / life_table_2.loc[i, 'Individuals Surviving (lx)'] - \
+                        life_table_1.loc[i, 'Years Lived in Interval (nLx)'] / life_table_1.loc[i, 'Individuals Surviving (lx)']))
 
         contributions.append(delta_x)
 
@@ -103,7 +103,6 @@ def calculate_life_expectancy_contribution(life_table_1, life_table_2):
         'Age': life_table_1['Age'],
         'Contribution to LE difference (years)': contributions
     })
-
 
 # Streamlit app logic
 st.title('Life Expectancy Decomposition Tool')
