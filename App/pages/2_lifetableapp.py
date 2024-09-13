@@ -172,10 +172,10 @@ if st.button('Calculate Life Expectancy Difference Decomposition'):
         ]
 
         # Display the filtered data
-        st.write(f"Filtered Data for {earlier_year}:")
-        st.dataframe(filtered_df_1)
-        st.write(f"Filtered Data for {later_year}:")
-        st.dataframe(filtered_df_2)
+        #st.write(f"Filtered Data for {earlier_year}:")
+        #st.dataframe(filtered_df_1)
+        #st.write(f"Filtered Data for {later_year}:")
+        #st.dataframe(filtered_df_2)
 
         if filtered_df_1.empty or filtered_df_2.empty:
             st.error("No data available for the selected filters.")
@@ -185,10 +185,10 @@ if st.button('Calculate Life Expectancy Difference Decomposition'):
             life_table_2 = calculate_life_table(filtered_df_2['total_deaths'].tolist(), filtered_df_2['population'].tolist())
 
             # Display the life tables
-            st.write(f"Life Table for {earlier_year}:")
-            st.dataframe(life_table_1)
-            st.write(f"Life Table for {later_year}:")
-            st.dataframe(life_table_2)
+            #st.write(f"Life Table for {earlier_year}:")
+            #st.dataframe(life_table_1)
+            #st.write(f"Life Table for {later_year}:")
+            #st.dataframe(life_table_2)
 
             # Calculate the contribution to the life expectancy difference
             le_contributions = calculate_life_expectancy_contribution(life_table_1, life_table_2)
