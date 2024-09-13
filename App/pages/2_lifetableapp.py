@@ -77,7 +77,6 @@ def calculate_life_table(deaths, population):
     df['Expectancy of Life at Age x (ex)'] = df['Cumulative Years Lived (Tx)'] / df['Individuals Surviving (lx)']
     
     return df
-
 def calculate_life_expectancy_contribution(life_table_1, life_table_2):
     """Calculate the contribution of each age group to life expectancy difference between two years."""
     # Ensure that the dataframes are aligned on age groups
@@ -91,14 +90,18 @@ def calculate_life_expectancy_contribution(life_table_1, life_table_2):
             delta_x = (life_table_1.loc[i, 'Individuals Surviving (lx)'] / life_table_1.loc[0, 'Individuals Surviving (lx)']) * \
                       (life_table_2.loc[i, 'Cumulative Years Lived (Tx)'] / life_table_2.loc[i, 'Individuals Surviving (lx)'] - \
                        life_table_1.loc[i, 'Cumulative Years Lived (Tx)'] / life_table_1.loc[i, 'Individuals Surviving (lx)'])
-        else:  # For all other age groups
-            delta_x = life_table_2.loc[i, 'Years in Interval (n)'] * \
-                      ((life_table_1.loc[i, 'Individuals Surviving (lx)'] / life_table_1.loc[0, 'Individuals Surviving (lx)']) * \
-                       (life_table_2.loc[i, 'Years Lived in Interval (nLx)'] / life_table_2.loc[i, 'Individuals Surviving (lx)'] - \
-                        life_table_1.loc[i, 'Years Lived in Interval (nLx)'] / life_table_1.loc[i, 'Individuals Surviving (lx)'])) + \
-                       (life_table_2.loc[i+1, 'Cumulative Years Lived (Tx)']/ life_table_1.loc[0, 'Individuals Surviving (lx)']) * \
-                       ((life_table_1.loc[i, 'Individuals Surviving (lx)']/life_table_2.loc[i, 'Individuals Surviving (lx)']) - \
-                        (life_table_1.loc[i+1, 'Individuals Surviving (lx)']/life_table_2.loc[i+1, 'Individuals Surviving (lx)']))
+        else:
+            # First term
+            first_term = (life_table_1.loc[i, 'Individuals Surviving (lx)'] / life_table_1.loc[0, 'Individuals Surviving (lx)']) * \
+                         (life_table_2.loc[i, 'Years Lived in Interval (nLx)'] / life_table_2.loc[i, 'Individuals Surviving (lx)'] - \
+                          life_table_1.loc[i, 'Years Lived in Interval (nLx)'] / life_table_1.loc[i, 'Individuals Surviving (lx)'])
+            
+            # Second term
+            second_term = (life_table_2.loc[i+1, 'Cumulative Years Lived (Tx)'] / life_table_1.loc[0, 'Individuals Surviving (lx)']) * \
+                          ((life_table_1.loc[i, 'Individuals Surviving (lx)'] / life_table_2.loc[i, 'Individuals Surviving (lx)']) - \
+                           (life_table_1.loc[i+1, 'Individuals Surviving (lx)'] / life_table_2.loc[i+1, 'Individuals Surviving (lx)']))
+            
+            delta_x = first_term + second_term
 
         contributions.append(delta_x)
 
