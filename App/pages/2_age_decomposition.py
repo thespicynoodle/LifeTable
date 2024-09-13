@@ -123,7 +123,75 @@ def calculate_life_expectancy_contribution(life_table_1, life_table_2):
 
     return contribution_df
 
+def calculate_risk_factor_proportions(df, year):
+    """
+    Calculate the proportions of deaths attributable to each risk factor (e.g., tobacco, alcohol, drugs)
+    based on the total deaths for each age group and return a DataFrame that includes the age group.
 
+    df: DataFrame containing the columns 'total_deaths', 'tobacco_deaths', 'alc_deaths', 'drug_deaths', 'age_name'.
+    year: The year of the data being processed (e.g., 2018, 2021).
+    
+    Returns:
+    A DataFrame with the age group and the calculated proportions for each risk factor for the given year.
+    """
+    # Filter data for the specific year
+    df_filtered = df[df['year'] == year].copy()
+    
+    # Check if necessary columns exist
+    required_columns = ['total_deaths', 'tobacco_deaths', 'alc_deaths', 'drug_deaths', 'age_name']
+    if not all(col in df_filtered.columns for col in required_columns):
+        raise ValueError(f"DataFrame must contain the following columns: {required_columns}")
+    
+    # Calculate risk factor proportions by dividing each risk factor death count by the total deaths
+    df_filtered['tobacco_proportion'] = df_filtered['tobacco_deaths'] / df_filtered['total_deaths']
+    df_filtered['alcohol_proportion'] = df_filtered['alc_deaths'] / df_filtered['total_deaths']
+    df_filtered['drug_proportion'] = df_filtered['drug_deaths'] / df_filtered['total_deaths']
+    
+    # Only return the columns needed for risk factor proportions and the age group
+    risk_proportions = df_filtered[['age_name', 'tobacco_proportion', 'alcohol_proportion', 'drug_proportion']]
+    
+    return risk_proportions
+
+
+def calculate_risk_factor_contributions(delta_x, mortality_rate_1, mortality_rate_2, risk_proportions_1, risk_proportions_2):
+    """
+    Calculate the contribution of each risk factor to the life expectancy difference in each age group.
+    
+    delta_x: Series containing the contribution of each age group to life expectancy difference.
+    mortality_rate_1: Series containing mortality rates for each age group in year 1.
+    mortality_rate_2: Series containing mortality rates for each age group in year 2.
+    risk_proportions_1: DataFrame containing risk factor proportions for year 1 (e.g., tobacco deaths / total deaths).
+    risk_proportions_2: DataFrame containing risk factor proportions for year 2 (e.g., tobacco deaths / total deaths).
+    
+    Returns:
+    A DataFrame with the contribution of each risk factor to life expectancy difference by age group.
+    """
+    risk_contributions = {}
+
+        # Reset index to ensure alignment
+    risk_proportions_1 = risk_proportions_1.reset_index(drop=True)
+    risk_proportions_2 = risk_proportions_2.reset_index(drop=True)
+    
+    # Iterate over each risk factor column
+    for risk_factor in risk_proportions_1.columns:
+        contributions = []
+        
+        for i in range(len(delta_x)):
+            # Apply the decomposition formula for each age group and risk factor
+            contribution = delta_x[i] * (
+                (risk_proportions_2.loc[i, risk_factor] * mortality_rate_2[i] - 
+                 risk_proportions_1.loc[i, risk_factor] * mortality_rate_1[i]) / 
+                (mortality_rate_2[i] - mortality_rate_1[i])
+            )
+            contributions.append(contribution)
+        
+        # Store the contributions for the current risk factor
+        risk_contributions[risk_factor] = contributions
+    
+    # Create a DataFrame for the risk factor contributions
+    contribution_df = pd.DataFrame(risk_contributions, index=delta_x.index)
+    
+    return contribution_df
 
 # Streamlit app logic
 st.title('Life Expectancy Decomposition Tool')
@@ -174,10 +242,10 @@ if st.button('Calculate Life Expectancy Difference Decomposition'):
         ]
 
         # Display the filtered data
-        #st.write(f"Filtered Data for {earlier_year}:")
-        #st.dataframe(filtered_df_1)
-        #st.write(f"Filtered Data for {later_year}:")
-        #st.dataframe(filtered_df_2)
+        st.write(f"Filtered Data for {earlier_year}:")
+        st.dataframe(filtered_df_1)
+        st.write(f"Filtered Data for {later_year}:")
+        st.dataframe(filtered_df_2)
 
         if filtered_df_1.empty or filtered_df_2.empty:
             st.error("No data available for the selected filters.")
@@ -205,6 +273,32 @@ if st.button('Calculate Life Expectancy Difference Decomposition'):
         # Get mortality rates for both years
             mortality_rate_1 = life_table_1['Mortality Rate (nmx)']
             mortality_rate_2 = life_table_2['Mortality Rate (nmx)']
+
+        # Calculate risk factor proportions for both years
+            risk_proportions_1 = calculate_risk_factor_proportions(filtered_df_1, earlier_year)
+            risk_proportions_2 = calculate_risk_factor_proportions(filtered_df_2, later_year)
+
+        # Calculate risk factor contributions
+            #risk_factor_contributions = calculate_risk_factor_contributions(delta_x, mortality_rate_1, mortality_rate_2, risk_proportions_1, risk_proportions_2)
+
+        # Display the risk factor contributions
+            
+            st.write("Risk Factor Proportions")
+            st.dataframe(risk_proportions_1)
+            st.dataframe(risk_proportions_2)
+            
+            
+            st.write('Contribution of Risk Factors to Life Expectancy Difference:')
+            #st.dataframe(risk_factor_contributions)
+
+        # Add a download button for CSV
+            # csv = risk_factor_contributions.to_csv(index=False).encode('utf-8')
+            # st.download_button(
+            #     label="Download Risk Factor Contributions as CSV",
+            #     data=csv,
+            #     file_name=f'Risk_Factor_Contributions_{earlier_year}_vs_{later_year}_{selected_country}_{selected_gender}.csv',
+            #     mime='text/csv',
+            # )
 
             # Add a download button for CSV
             csv = le_contributions.to_csv(index=False).encode('utf-8')
