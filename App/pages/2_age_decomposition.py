@@ -124,6 +124,37 @@ def calculate_life_expectancy_contribution(life_table_1, life_table_2):
     return contribution_df
 
 
+def calculate_risk_factor_proportions(df, year):
+    """
+    Calculate the proportions of deaths attributable to each risk factor (e.g., tobacco, alcohol, drugs)
+    based on the total deaths for each age group and return a DataFrame that can be used in 
+    calculate_risk_factor_contributions.
+
+    df: DataFrame containing the columns 'total_deaths', 'tobacco_deaths', 'alc_deaths', 'drug_deaths'.
+    year: The year of the data being processed (e.g., 2018, 2021).
+    
+    Returns:
+    A DataFrame with the calculated proportions for each risk factor for the given year.
+    """
+    # Filter data for the specific year
+    df_filtered = df[df['year'] == year].copy()
+    
+    # Check if necessary columns exist
+    required_columns = ['total_deaths', 'tobacco_deaths', 'alc_deaths', 'drug_deaths']
+    if not all(col in df_filtered.columns for col in required_columns):
+        raise ValueError(f"DataFrame must contain the following columns: {required_columns}")
+    
+    # Calculate risk factor proportions by dividing each risk factor death count by the total deaths
+    df_filtered['tobacco_proportion'] = df_filtered['tobacco_deaths'] / df_filtered['total_deaths']
+    df_filtered['alcohol_proportion'] = df_filtered['alc_deaths'] / df_filtered['total_deaths']
+    df_filtered['drug_proportion'] = df_filtered['drug_deaths'] / df_filtered['total_deaths']
+    
+    # Only return the columns needed for risk factor proportions in the contribution calculation
+    risk_proportions = df_filtered[['tobacco_proportion', 'alcohol_proportion', 'drug_proportion']]
+    
+    return risk_proportions
+
+
 def calculate_risk_factor_contributions(delta_x, mortality_rate_1, mortality_rate_2, risk_proportions_1, risk_proportions_2):
     """
     Calculate the contribution of each risk factor to the life expectancy difference in each age group.
@@ -241,12 +272,12 @@ if st.button('Calculate Life Expectancy Difference Decomposition'):
             mortality_rate_1 = life_table_1['Mortality Rate (nmx)']
             mortality_rate_2 = life_table_2['Mortality Rate (nmx)']
 
-        # Get risk factor proportions for both years
-            risk_factors_1 = filtered_df_1[['tobacco_deaths', 'alcohol_deaths', 'drug_deaths']] / filtered_df_1['total_deaths']
-            risk_factors_2 = filtered_df_2[['tobacco_deaths', 'alcohol_deaths', 'drug_deaths']] / filtered_df_2['total_deaths']
+        # Calculate risk factor proportions for both years
+            risk_proportions_1 = calculate_risk_factor_proportions(df, earlier_year)
+            risk_proportions_2 = calculate_risk_factor_proportions(df, later_year)
 
         # Calculate risk factor contributions
-            risk_factor_contributions = calculate_risk_factor_contributions(delta_x, mortality_rate_1, mortality_rate_2, risk_factors_1, risk_factors_2)
+            risk_factor_contributions = calculate_risk_factor_contributions(delta_x, mortality_rate_1, mortality_rate_2, risk_proportions_1, risk_proportions_2)
 
         # Display the risk factor contributions
             st.write('Contribution of Risk Factors to Life Expectancy Difference:')
