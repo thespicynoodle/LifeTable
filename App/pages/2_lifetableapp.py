@@ -98,7 +98,7 @@ def calculate_life_expectancy_contribution(life_table_1, life_table_2):
                         life_table_1.loc[i, 'Years Lived in Interval (nLx)'] / life_table_1.loc[i, 'Individuals Surviving (lx)'])) + \
                        (life_table_2.loc[i+1, 'Cumulative Years Lived (Tx)']/ life_table_1.loc[0, 'Individuals Surviving (lx)']) * \
                        ((life_table_1.loc[i, 'Individuals Surviving (lx)']/life_table_2.loc[i, 'Individuals Surviving (lx)']) - \
-                        ((life_table_1.loc[i+1, 'Individuals Surviving (lx)']/life_table_2.loc[i+1, 'Individuals Surviving (lx)']))
+                        (life_table_1.loc[i+1, 'Individuals Surviving (lx)']/life_table_2.loc[i+1, 'Individuals Surviving (lx)']))
 
         contributions.append(delta_x)
 
