@@ -151,24 +151,30 @@ selected_years = st.sidebar.multiselect('Select Years', df['year'].unique(), def
 selected_country = st.sidebar.selectbox('Select Country', df['location_name'].unique(), index=0)
 selected_gender = st.sidebar.selectbox('Select Gender', df['sex_name'].unique(), index=0)
 
+# Button for calculation
 if st.button('Calculate Life Expectancy Difference Decomposition'):
     if len(selected_years) == 2:
+        # Sort the selected years to ensure earlier year is always life_table_1
+        sorted_years = sorted(selected_years)
+        earlier_year = sorted_years[0]
+        later_year = sorted_years[1]
+        
         # Filter data for the selected country, gender, and years
         filtered_df_1 = df[
-            (df['year'] == selected_years[0]) &
+            (df['year'] == earlier_year) &
             (df['location_name'] == selected_country) &
             (df['sex_name'] == selected_gender)
         ]
         filtered_df_2 = df[
-            (df['year'] == selected_years[1]) &
+            (df['year'] == later_year) &
             (df['location_name'] == selected_country) &
             (df['sex_name'] == selected_gender)
         ]
 
         # Display the filtered data
-        st.write(f"Filtered Data for {selected_years[0]}:")
+        st.write(f"Filtered Data for {earlier_year}:")
         st.dataframe(filtered_df_1)
-        st.write(f"Filtered Data for {selected_years[1]}:")
+        st.write(f"Filtered Data for {later_year}:")
         st.dataframe(filtered_df_2)
 
         if filtered_df_1.empty or filtered_df_2.empty:
@@ -179,16 +185,16 @@ if st.button('Calculate Life Expectancy Difference Decomposition'):
             life_table_2 = calculate_life_table(filtered_df_2['total_deaths'].tolist(), filtered_df_2['population'].tolist())
 
             # Display the life tables
-            st.write(f"Life Table for {selected_years[0]}:")
+            st.write(f"Life Table for {earlier_year}:")
             st.dataframe(life_table_1)
-            st.write(f"Life Table for {selected_years[1]}:")
+            st.write(f"Life Table for {later_year}:")
             st.dataframe(life_table_2)
 
             # Calculate the contribution to the life expectancy difference
             le_contributions = calculate_life_expectancy_contribution(life_table_1, life_table_2)
 
             # Display the decomposition results
-            st.write(f"Life Expectancy Contribution by Age Group ({selected_years[0]} vs {selected_years[1]}):")
+            st.write(f"Life Expectancy Contribution by Age Group ({later_year} vs {earlier_year}):")
             st.dataframe(le_contributions)
     else:
         st.warning("Please select exactly two years for decomposition.")
