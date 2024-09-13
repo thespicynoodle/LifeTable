@@ -1,0 +1,149 @@
+import streamlit as st
+import os
+from dotenv import load_dotenv
+import pandas as pd
+from supabase import create_client, Client
+
+load_dotenv()
+
+# Supabase credentials
+url = os.getenv("PROJECT_URL")
+key = os.getenv("SECRET_PROJECT_API_KEY")
+
+# Initialize Supabase client
+supabase: Client = create_client(url, key)
+
+def load_data():
+    """Fetch data from Supabase table 'LifeTables' with pagination"""
+    data_list = []
+    start_row = 0
+    batch_size = 1000
+
+    while True:
+        response = supabase.table('PopulationData').select("*").range(start_row, start_row + batch_size - 1).execute()
+        batch_data = response.data
+        
+        if not batch_data:
+            break
+        
+        data_list.extend(batch_data)
+        start_row += batch_size
+    
+    return pd.DataFrame(data_list)
+
+def calculate_life_expectancy_contribution(life_table_1, life_table_2):
+    """Calculate the contribution of each age group to life expectancy difference between two years."""
+    # Ensure that the dataframes are aligned on age groups
+    if not (life_table_1['Age'].equals(life_table_2['Age'])):
+        raise ValueError("Age groups in the two life tables must match")
+
+    # Initialize a list to store the contributions
+    contributions = []
+
+    # Iterate over age groups
+    for i in range(len(life_table_1)):
+        if i == len(life_table_1) - 1:  # Last age group
+            delta_x = (life_table_2.loc[i, 'lx'] / life_table_1.loc[i, 'lx']) * \
+                      (life_table_2.loc[i, 'Tx'] / life_table_2.loc[i, 'lx'] - \
+                       life_table_1.loc[i, 'Tx'] / life_table_1.loc[i, 'lx'])
+        else:  # For other age groups
+            delta_x = life_table_2.loc[i, 'n'] * \
+                      ((life_table_2.loc[i, 'lx'] / life_table_1.loc[i, 'lx']) * \
+                       (life_table_2.loc[i, 'Lx'] / life_table_2.loc[i, 'lx'] - \
+                        life_table_1.loc[i, 'Lx'] / life_table_1.loc[i, 'lx']))
+        
+        contributions.append(delta_x)
+
+    return pd.DataFrame({
+        'Age': life_table_1['Age'],
+        'Contribution to LE difference (years)': contributions
+    })
+
+
+# Button for calculating the decomposition between two years
+if st.button('Calculate Life Expectancy Difference Decomposition'):
+    if len(selected_years) == 2:
+        # Filter data for the selected country, gender, and years
+        filtered_df_1 = df[
+            (df['year'] == selected_years[0]) &
+            (df['location_name'] == selected_country) &
+            (df['sex_name'] == selected_gender)
+        ]
+        filtered_df_2 = df[
+            (df['year'] == selected_years[1]) &
+            (df['location_name'] == selected_country) &
+            (df['sex_name'] == selected_gender)
+        ]
+
+        # Calculate life tables for both years
+        life_table_1 = calculate_life_table(filtered_df_1['total_deaths'].tolist(), filtered_df_1['population'].tolist())
+        life_table_2 = calculate_life_table(filtered_df_2['total_deaths'].tolist(), filtered_df_2['population'].tolist())
+
+        # Calculate the contribution to the life expectancy difference
+        le_contributions = calculate_life_expectancy_contribution(life_table_1, life_table_2)
+
+        # Display the decomposition results
+        st.write(f"Life Expectancy Contribution by Age Group ({selected_years[0]} vs {selected_years[1]})")
+        st.dataframe(le_contributions)
+    else:
+        st.write("Please select exactly two years for decomposition.")
+
+# New Streamlit page for multiple life tables
+st.title('Multiple Life Table Calculator')
+
+# Load data from Supabase
+df = load_data()
+
+# Define the correct order of age groups
+age_order = ['<1 year', '12-23 months', '2-4 years', '5-9 years', '10-14 years', '15-19 years', 
+             '20-24 years', '25-29 years', '30-34 years', '35-39 years', '40-44 years', 
+             '45-49 years', '50-54 years', '55-59 years', '60-64 years', '65-69 years', 
+             '70-74 years', '75-79 years', '80-84 years', '85-89 years', '90-94 years', '95+ years']
+
+df['age_name'] = pd.Categorical(df['age_name'], categories=age_order, ordered=True)
+df = df.sort_values('age_name')
+
+# User selections for multiple years, country, and gender
+selected_years = st.sidebar.multiselect('Select Years', df['year'].unique())
+selected_country = st.sidebar.selectbox('Select Country', df['location_name'].unique())
+selected_gender = st.sidebar.selectbox('Select Gender', df['sex_name'].unique())
+
+if st.button('Calculate and Save Life Tables'):
+    if selected_years:
+        # Create an Excel writer
+        with pd.ExcelWriter('life_tables.xlsx') as writer:
+            life_tables = {}
+            for year in selected_years:
+                filtered_df = df[
+                    (df['year'] == year) &
+                    (df['location_name'] == selected_country) &
+                    (df['sex_name'] == selected_gender)
+                ]
+
+                if not filtered_df.empty:
+                    deaths = filtered_df['total_deaths'].tolist()
+                    population = filtered_df['population'].tolist()
+
+                    life_table = calculate_life_table(deaths, population)
+                    life_tables[year] = life_table
+
+                    # Write each life table to a different sheet
+                    life_table.to_excel(writer, sheet_name=str(year), index=False)
+                else:
+                    st.write(f"No data available for {selected_country} ({selected_gender}) in {year}")
+
+        # Display CSV data on the front end
+        for year, life_table in life_tables.items():
+            st.write(f"Life Table for {selected_country} ({selected_gender}) in {year}")
+            st.dataframe(life_table)
+
+        # Provide download link for the Excel file
+        with open('life_tables.xlsx', 'rb') as file:
+            st.download_button(
+                label="Download Life Tables",
+                data=file,
+                file_name='life_tables.xlsx',
+                mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            )
+    else:
+        st.write("Please select at least one year.")
