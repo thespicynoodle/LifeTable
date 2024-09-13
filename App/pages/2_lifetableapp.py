@@ -141,4 +141,13 @@ if st.button('Calculate Life Expectancy Difference Decomposition'):
         else:
             # Calculate life tables for both years
             life_table_1 = calculate_life_table(filtered_df_1['total_deaths'].tolist(), filtered_df_1['population'].tolist())
-            life_table_2 = calculate_life_table(filtered_df_2['total
+            life_table_2 = calculate_life_table(filtered_df_2['total_deaths'].tolist(), filtered_df_2['population'].tolist())
+
+            # Calculate the contribution to the life expectancy difference
+            le_contributions = calculate_life_expectancy_contribution(life_table_1, life_table_2)
+
+            # Display the decomposition results
+            st.write(f"Life Expectancy Contribution by Age Group ({selected_years[0]} vs {selected_years[1]})")
+            st.dataframe(le_contributions)
+    else:
+        st.warning("Please select exactly two years for decomposition.")
